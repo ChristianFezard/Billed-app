@@ -92,6 +92,97 @@ describe("Given I am connected as an employee", () => {
         expect(modal.classList.contains("show")).toBe(true);
       });
     })
-  }) 
+  })
+  
+  // test de l'envoi vers la page "envoyer une nouvelle note de frais" via le click du bouton "Nouvelle note de frais"
+
+  describe("When I click on the New Bill button", () => {
+    test("Then I am sent to the New Bill page", () => {
+      // Création d'une fonction mockant une navigation
+      const onNavigateMock = jest.fn();
+      // création d'une instance Bills
+      const bills = new Bills({
+          document,
+          onNavigate: onNavigateMock,
+          store: null,
+          localStorage: null,
+      });
+      // simulation de la fonction click du button
+      bills.handleClickNewBill();
+      // Vérification que la fonction onNavigate nous envoie vers la page NewBill
+      expect(onNavigateMock).toHaveBeenCalledWith(ROUTES_PATH["NewBill"]);
+    })
+  })  
 })
 
+// test de la methode GET pour recuperation de la page Note de frais
+
+describe("Given I am a user connected as Employee", () => {
+  describe("When I navigate to Bills", () => {
+    test("fetches bills from mock API GET", async () => {
+      localStorage.setItem("user", JSON.stringify({ type: "Employee", email: "a@a" }));
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.append(root)
+      router()
+      window.onNavigate(ROUTES_PATH['Bills'])
+      await waitFor(() => screen.getByText("Mes notes de frais"))
+      expect(document.querySelectorAll('tbody tr').length).toBe(4)
+      expect(document.querySelectorAll('tbody tr td')[0].textContent).toEqual("Hôtel et logement")
+    })
+  })
+
+  // test de connexion
+
+  describe("When an error occurs on API", () => {
+    beforeEach(() => {
+      jest.spyOn(mockedStore, "bills")
+      Object.defineProperty(
+          window,
+          'localStorage',
+          { value: localStorageMock }
+      )
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: "a@a"
+      }))
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.appendChild(root)
+      router()
+    })
+
+    // test erreur 404
+
+    test("fetches bills from an API and fails with 404 message error", async () => {
+
+      mockedStore.bills.mockImplementationOnce(() => {
+        return {
+          list : () =>  {
+            return Promise.reject(new Error("Erreur 404"))
+          }
+        }})
+      window.onNavigate(ROUTES_PATH['Bills'])
+      await new Promise(process.nextTick);
+      const message = await screen.getByText(/Erreur 404/)
+      expect(message).toBeTruthy()
+    })
+
+    // test erreur 500
+
+    test("fetches messages from an API and fails with 500 message error", async () => {
+
+      mockedStore.bills.mockImplementationOnce(() => {
+        return {
+          list : () =>  {
+            return Promise.reject(new Error("Erreur 500"))
+          }
+        }})
+
+      window.onNavigate(ROUTES_PATH['Bills'])
+      await new Promise(process.nextTick);
+      const message = await screen.getByText(/Erreur 500/)
+      expect(message).toBeTruthy()
+    })
+  })
+})
