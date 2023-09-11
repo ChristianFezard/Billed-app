@@ -12,6 +12,8 @@ import {localStorageMock} from "../__mocks__/localStorage.js";
 import mockedStore from "../__mocks__/store.js"
 import router from "../app/Router.js";
 
+// Mock du store
+
 jest.mock("../app/store", () => mockedStore)
 
 describe("Given I am connected as an employee", () => {
@@ -79,18 +81,18 @@ describe("Given I am connected as an employee", () => {
       // recuperation des id test icones oeil
       const icon = screen.getAllByTestId("icon-eye")
       // simulation de la fonction click de l'icone
-      const handleClickIconEye = jest.fn(billPage.handleClickIconEye);
+      const handleClickIconEye = jest.fn(billPage.handleClickIconEye)
       // recuperation de la modale
       const modal = document.getElementById("modaleFile")
       // simulation de l'ouverture de la modale
       $.fn.modal = jest.fn(() => modal.classList.add("show"))
       // ajout de l'ecouteur de click, simulation du click et et mise en place de l'attente
       icon.forEach((icon) => {
-        icon.addEventListener("click", () => handleClickIconEye(icon));
-        userEvent.click(icon);
-        expect(handleClickIconEye).toHaveBeenCalled();
-        expect(modal.classList.contains("show")).toBe(true);
-      });
+        icon.addEventListener("click", () => handleClickIconEye(icon))
+        userEvent.click(icon)
+        expect(handleClickIconEye).toHaveBeenCalled()
+        expect(modal.classList.contains("show")).toBe(true)
+      })
     })
   })
   
@@ -99,28 +101,29 @@ describe("Given I am connected as an employee", () => {
   describe("When I click on the New Bill button", () => {
     test("Then I am sent to the New Bill page", () => {
       // Création d'une fonction mockant une navigation
-      const onNavigateMock = jest.fn();
+      const onNavigateMock = jest.fn()
       // création d'une instance Bills
       const bills = new Bills({
           document,
           onNavigate: onNavigateMock,
           store: null,
           localStorage: null,
-      });
+      })
       // simulation de la fonction click du button
-      bills.handleClickNewBill();
+      bills.handleClickNewBill()
       // Vérification que la fonction onNavigate nous envoie vers la page NewBill
-      expect(onNavigateMock).toHaveBeenCalledWith(ROUTES_PATH["NewBill"]);
+      expect(onNavigateMock).toHaveBeenCalledWith(ROUTES_PATH["NewBill"])
     })
   })  
 })
 
 // test de la methode GET pour recuperation de la page Note de frais
+// On utilise les données mocks pour le test
 
 describe("Given I am a user connected as Employee", () => {
   describe("When I navigate to Bills", () => {
     test("fetches bills from mock API GET", async () => {
-      localStorage.setItem("user", JSON.stringify({ type: "Employee", email: "a@a" }));
+      localStorage.setItem("user", JSON.stringify({ type: "Employee", email: "a@a" }))
       const root = document.createElement("div")
       root.setAttribute("id", "root")
       document.body.append(root)
@@ -163,7 +166,7 @@ describe("Given I am a user connected as Employee", () => {
           }
         }})
       window.onNavigate(ROUTES_PATH['Bills'])
-      await new Promise(process.nextTick);
+      await new Promise(process.nextTick)
       const message = await screen.getByText(/Erreur 404/)
       expect(message).toBeTruthy()
     })
@@ -180,7 +183,7 @@ describe("Given I am a user connected as Employee", () => {
         }})
 
       window.onNavigate(ROUTES_PATH['Bills'])
-      await new Promise(process.nextTick);
+      await new Promise(process.nextTick)
       const message = await screen.getByText(/Erreur 500/)
       expect(message).toBeTruthy()
     })
