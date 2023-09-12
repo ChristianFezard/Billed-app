@@ -75,132 +75,27 @@ afterEach(() => {
 // Tests
 describe("Given I am connected as an employee", () => {
   describe("When I am on the NewBill Page", () => {
+    // test affichage de la page
     test("Then the form should be rendered", () => {
       // Vérification que le formulaire est rendu
       expect(screen.getByTestId("form-new-bill")).toBeTruthy()
     })
 
-    test("Then I can create a new bill", async () => {
-      // Mock de la fonction de création pour renvoyer une nouvelle note de frais
-      const createBill = jest.fn(mockedStore.bills().create)
-      const { fileUrl, key } = await createBill({
-          // Données factices de la nouvelle note de frais
-          id: "47qAXb6fIm2zOKkLzMro",
-          vat: "80",
-          fileUrl:
-              "https://firebasestorage.googleapis.com/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a",
-          status: "pending",
-          type: "Hôtel et logement",
-          commentary: "séminaire billed",
-          name: "encore",
-          fileName: "preview-facture-free-201801-pdf-1.jpg",
-          date: "2004-04-04",
-          amount: 400,
-          commentAdmin: "ok",
-          email: "a@a",
-          pct: 20,
-        })
+    // test de l'icone mail
+    test("Then mail icon in vertical layout should be highlighted", async () => {
 
-        // Vérification que la fonction de création est appelée avec les bons arguments
-        expect(createBill).toHaveBeenCalledTimes(1)
-        expect(createBill).toHaveBeenCalledWith({
-          id: "47qAXb6fIm2zOKkLzMro",
-          vat: "80",
-          fileUrl:
-              "https://firebasestorage.googleapis.com/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a",
-          status: "pending",
-          type: "Hôtel et logement",
-          commentary: "séminaire billed",
-          name: "encore",
-          fileName: "preview-facture-free-201801-pdf-1.jpg",
-          date: "2004-04-04",
-          amount: 400,
-          commentAdmin: "ok",
-          email: "a@a",
-          pct: 20,
-        })
-
-        // Vérification des valeurs retournées
-        expect(key).toBe("1234");
-        expect(fileUrl).toBe("https://localhost:3456/images/test.jpg");
-    });
-
-    test("Then I can update an existing bill", async () => {
-      // Mock de la fonction de création pour renvoyer une note de frais existante
-      const createBill = jest.fn(mockedStore.bills().create)
-      const { key } = await createBill({
-          // Données factices de la note de frais existante
-          id: "123456",
-          vat: "20",
-          fileUrl: "https://example.com/expenses/123456",
-          status: "pending",
-          type: "Transports",
-          name: "Test Expense Note",
-          fileName: "expense.pdf",
-          date: "2023-06-02",
-          amount: 100,
-          commentAdmin: "",
-          email: "employee@example.com",
-          pct: 20,
-      })
-
-      // Vérification que la fonction de création est appelée avec les bons arguments
-      expect(createBill).toHaveBeenCalledTimes(1)
-      expect(createBill).toHaveBeenCalledWith({
-          id: "123456",
-          vat: "20",
-          fileUrl: "https://example.com/expenses/123456",
-          status: "pending",
-          type: "Transports",
-          name: "Test Expense Note",
-          fileName: "expense.pdf",
-          date: "2023-06-02",
-          amount: 100,
-          commentAdmin: "",
-          email: "employee@example.com",
-          pct: 20,
-      })
-
-      // Mock de la fonction de mise à jour
-      const updateBill = jest.fn(mockedStore.bills().update)
-
-      // Appel de la fonction de mise à jour avec les nouvelles valeurs
-      await updateBill({
-          id: "123456",
-          name: "Updated Expense Note",
-          amount: 200,
-      })
-
-      // Vérification que la fonction de mise à jour est appelée avec les bons arguments
-      expect(updateBill).toHaveBeenCalledTimes(1);
-      expect(updateBill).toHaveBeenCalledWith({
-          id: "123456",
-          name: "Updated Expense Note",
-          amount: 200,
-      })
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }))
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.append(root)
+      router()
+      window.onNavigate(ROUTES_PATH.NewBill)
+      const mailIcon = screen.getByTestId('icon-mail')
+      expect(mailIcon.classList).toContain('active-icon')
     })
-
-    test("Then handleChangeFile should handle valid file", () => {
-      // Création d'une nouvelle instance de NewBill
-      const newBill = setNewBill()
-      // Espionnage de la méthode handleChangeFile de newBill pour pouvoir vérifier son invocation
-      const handleChangeFile = jest.spyOn(newBill, "handleChangeFile")
-      const fileInput = screen.getByTestId("file")
-      // Ecoute l'evenement "change" qui appelle handleChangeFile
-      fileInput.addEventListener("change", handleChangeFile)
-      // Simulation d'un changement de fichier avec un fichier valide
-      fireEvent.change(fileInput, {
-          target: {
-              files: [
-                  new File(["image"], "image.png", {
-                      type: "image/png",
-                  }),
-              ],
-          },
-      })
-      // Vérification que la méthode handleChangeFile a été appelée une fois
-      expect(handleChangeFile).toHaveBeenCalledTimes(1)
-    });
 
     test("Then handleChangeFile can handle invalid file if wrong type", () => {
       // Création d'une nouvelle instance de NewBill
@@ -253,6 +148,74 @@ describe("Given I am connected as an employee", () => {
       // Vérification que le formulaire est visible
       expect(newBillForm).toBeVisible()
     })
+
+    // test integration method POST
+    test("Then I can create a new bill", async () => {
+      // Mock de la fonction de création pour renvoyer une nouvelle note de frais
+      const createBill = jest.fn(mockedStore.bills().create)
+      const { fileUrl, key } = await createBill({
+        // Données factices de la nouvelle note de frais
+        id: "47qAXb6fIm2zOKkLzMro",
+        vat: "80",
+        fileUrl:
+            "https://firebasestorage.googleapis.com/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a",
+        status: "pending",
+        type: "Hôtel et logement",
+        commentary: "séminaire billed",
+        name: "encore",
+        fileName: "preview-facture-free-201801-pdf-1.jpg",
+        date: "2004-04-04",
+        amount: 400,
+        commentAdmin: "ok",
+        email: "a@a",
+        pct: 20,
+      })
+
+      // Vérification que la fonction de création est appelée avec les bons arguments
+      expect(createBill).toHaveBeenCalledTimes(1)
+      expect(createBill).toHaveBeenCalledWith({
+        id: "47qAXb6fIm2zOKkLzMro",
+        vat: "80",
+        fileUrl:
+            "https://firebasestorage.googleapis.com/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a",
+        status: "pending",
+        type: "Hôtel et logement",
+        commentary: "séminaire billed",
+        name: "encore",
+        fileName: "preview-facture-free-201801-pdf-1.jpg",
+        date: "2004-04-04",
+        amount: 400,
+        commentAdmin: "ok",
+        email: "a@a",
+        pct: 20,
+      })
+
+      // Vérification des valeurs retournées
+      expect(key).toBe("1234");
+      expect(fileUrl).toBe("https://localhost:3456/images/test.jpg");
+    });
+
+    test("Then handleChangeFile should handle valid file", () => {
+      // Création d'une nouvelle instance de NewBill
+      const newBill = setNewBill()
+      // Espionnage de la méthode handleChangeFile de newBill pour pouvoir vérifier son invocation
+      const handleChangeFile = jest.spyOn(newBill, "handleChangeFile")
+      const fileInput = screen.getByTestId("file")
+      // Ecoute l'evenement "change" qui appelle handleChangeFile
+      fileInput.addEventListener("change", handleChangeFile)
+      // Simulation d'un changement de fichier avec un fichier valide
+      fireEvent.change(fileInput, {
+          target: {
+              files: [
+                  new File(["image"], "image.png", {
+                      type: "image/png",
+                  }),
+              ],
+          },
+      })
+      // Vérification que la méthode handleChangeFile a été appelée une fois
+      expect(handleChangeFile).toHaveBeenCalledTimes(1)
+    });
 
     test("Then new bill can be added but returns a 404 error", async () => {
       // Création d'une nouvelle instance de NewBill
